@@ -1,0 +1,3 @@
+[submodule "balances-app"]
+	path = balances-app
+	url = https://github.com/juancadavidc/bank-deposits
