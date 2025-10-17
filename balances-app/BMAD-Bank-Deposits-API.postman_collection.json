@@ -1,0 +1,1371 @@
+{
+  "info": {
+    "name": "BMAD Bank Deposits API",
+    "description": "API collection for BMAD Bank Deposits application - Colombian bank SMS transaction processing system",
+    "version": "2.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string",
+      "description": "Base URL for the API"
+    },
+    {
+      "key": "webhookSecret",
+      "value": "test-webhook-secret",
+      "type": "string",
+      "description": "Webhook authentication secret"
+    },
+    {
+      "key": "timestamp",
+      "value": "{{$timestamp}}",
+      "type": "string",
+      "description": "Current timestamp"
+    },
+    {
+      "key": "webhookId",
+      "value": "webhook_{{$randomInt}}",
+      "type": "string",
+      "description": "Unique webhook identifier"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Checks",
+      "description": "Health check endpoints for monitoring",
+      "item": [
+        {
+          "name": "V2 API Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/webhook/transaction",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "webhook", "transaction"]
+            },
+            "description": "Check the health status of the V2 webhook API"
+          },
+          "response": [
+            {
+              "name": "Healthy Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v2/webhook/transaction",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v2", "webhook", "transaction"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"healthy\",\n  \"version\": \"v2\",\n  \"timestamp\": \"2024-01-15T10:30:00.000Z\",\n  \"endpoints\": [\n    \"POST /api/v2/webhook/transaction - Process structured transaction webhook\"\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "V1 SMS Webhook API",
+      "description": "Legacy SMS webhook endpoint for parsing Bancolombia SMS messages",
+      "item": [
+        {
+          "name": "CORS Preflight - SMS Webhook",
+          "request": {
+            "method": "OPTIONS",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/webhook/sms",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhook", "sms"]
+            },
+            "description": "CORS preflight request for SMS webhook"
+          }
+        },
+        {
+          "name": "Process SMS Webhook - Valid Deposit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{webhookSecret}}"
+              },
+              {
+                "key": "X-Timestamp",
+                "value": "{{timestamp}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Bancolombia te informa que se ha realizado un abono por $190,000 a tu cuenta de ahorros **7251 el 15/01/2024 a las 14:30. Saldo disponible: $2,500,000. No respondas este mensaje.\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"phone\": \"+573001234567\",\n  \"webhookId\": \"{{webhookId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webhook/sms",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhook", "sms"]
+            },
+            "description": "Process a valid Bancolombia deposit SMS message"
+          },
+          "response": [
+            {
+              "name": "Successful Processing",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer test-webhook-secret"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"message\": \"Bancolombia te informa que se ha realizado un abono por $190,000 a tu cuenta de ahorros **7251 el 15/01/2024 a las 14:30. Saldo disponible: $2,500,000. No respondas este mensaje.\",\n  \"timestamp\": \"2024-01-15T14:30:00.000Z\",\n  \"phone\": \"+573001234567\",\n  \"webhookId\": \"webhook_1234567890\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/webhook/sms",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "webhook", "sms"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"processed\",\n  \"transactionId\": \"123e4567-e89b-12d3-a456-426614174000\",\n  \"webhookId\": \"webhook_1234567890\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Process SMS Webhook - Invalid Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{webhookSecret}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"This is not a valid Bancolombia SMS message\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"phone\": \"+573001234567\",\n  \"webhookId\": \"{{webhookId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webhook/sms",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhook", "sms"]
+            },
+            "description": "Test parsing error with invalid SMS message"
+          }
+        },
+        {
+          "name": "Process SMS Webhook - Duplicate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{webhookSecret}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Bancolombia te informa que se ha realizado un abono por $190,000 a tu cuenta de ahorros **7251 el 15/01/2024 a las 14:30. Saldo disponible: $2,500,000. No respondas este mensaje.\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"phone\": \"+573001234567\",\n  \"webhookId\": \"duplicate_test_123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webhook/sms",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhook", "sms"]
+            },
+            "description": "Test duplicate webhook ID handling"
+          }
+        },
+        {
+          "name": "Process SMS Webhook - Missing Auth",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Bancolombia te informa que se ha realizado un abono por $190,000 a tu cuenta de ahorros **7251 el 15/01/2024 a las 14:30. Saldo disponible: $2,500,000. No respondas este mensaje.\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"phone\": \"+573001234567\",\n  \"webhookId\": \"{{webhookId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webhook/sms",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhook", "sms"]
+            },
+            "description": "Test authentication error - missing authorization header"
+          }
+        },
+        {
+          "name": "Process SMS Webhook - Invalid Auth",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer invalid-secret"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Bancolombia te informa que se ha realizado un abono por $190,000 a tu cuenta de ahorros **7251 el 15/01/2024 a las 14:30. Saldo disponible: $2,500,000. No respondas este mensaje.\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"phone\": \"+573001234567\",\n  \"webhookId\": \"{{webhookId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webhook/sms",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhook", "sms"]
+            },
+            "description": "Test authentication error - invalid webhook secret"
+          }
+        }
+      ]
+    },
+    {
+      "name": "V2 Structured Webhook API",
+      "description": "New structured webhook endpoint for processing various bank transactions",
+      "item": [
+        {
+          "name": "CORS Preflight - V2 Webhook",
+          "request": {
+            "method": "OPTIONS",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/webhook/transaction",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "webhook", "transaction"]
+            },
+            "description": "CORS preflight request for V2 webhook"
+          }
+        },
+        {
+          "name": "Process V2 Webhook - Bancolombia Deposit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{webhookSecret}}"
+              },
+              {
+                "key": "X-Timestamp",
+                "value": "{{timestamp}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"source\": \"bancolombia\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"sourceFrom\": \"bancolombia@noreply.com\",\n  \"sourceTo\": \"jdcadavid96@gmail.com\",\n  \"event\": \"deposit\",\n  \"message\": \"Bancolombia te informa que se ha realizado un abono por $190,000 a tu cuenta de ahorros **7251 el 15/01/2024 a las 14:30. Saldo disponible: $2,500,000. No respondas este mensaje.\",\n  \"amount\": 190000,\n  \"currency\": \"COP\",\n  \"webhookId\": \"{{webhookId}}\",\n  \"metadata\": {\n    \"accountNumber\": \"**7251\",\n    \"senderName\": \"Juan Pérez\",\n    \"reference\": \"TRF-123456789\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/webhook/transaction",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "webhook", "transaction"]
+            },
+            "description": "Process a Bancolombia deposit transaction via V2 API"
+          },
+          "response": [
+            {
+              "name": "Successful Processing",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer test-webhook-secret"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"source\": \"bancolombia\",\n  \"timestamp\": \"2024-01-15T14:30:00.000Z\",\n  \"sourceFrom\": \"bancolombia@noreply.com\",\n  \"sourceTo\": \"jdcadavid96@gmail.com\",\n  \"event\": \"deposit\",\n  \"message\": \"Bancolombia te informa que se ha realizado un abono por $190,000 a tu cuenta de ahorros **7251 el 15/01/2024 a las 14:30. Saldo disponible: $2,500,000. No respondas este mensaje.\",\n  \"amount\": 190000,\n  \"currency\": \"COP\",\n  \"webhookId\": \"v2_webhook_1234567890\",\n  \"metadata\": {\n    \"accountNumber\": \"**7251\",\n    \"senderName\": \"Juan Pérez\",\n    \"reference\": \"TRF-123456789\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v2/webhook/transaction",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v2", "webhook", "transaction"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"processed\",\n  \"transactionId\": \"123e4567-e89b-12d3-a456-426614174000\",\n  \"webhookId\": \"v2_webhook_1234567890\",\n  \"sourceId\": \"src_123e4567-e89b-12d3-a456-426614174000\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Process V2 Webhook - Nequi Transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{webhookSecret}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"source\": \"nequi\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"sourceFrom\": \"+573001234567\",\n  \"sourceTo\": \"+573009876543\",\n  \"event\": \"transfer\",\n  \"message\": \"Nequi: Recibiste $50,000 de María García. Tu saldo: $1,200,000. No responder.\",\n  \"amount\": 50000,\n  \"currency\": \"COP\",\n  \"webhookId\": \"{{webhookId}}\",\n  \"metadata\": {\n    \"senderName\": \"María García\",\n    \"reference\": \"NQ-987654321\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/webhook/transaction",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "webhook", "transaction"]
+            },
+            "description": "Process a Nequi transfer transaction via V2 API"
+          }
+        },
+        {
+          "name": "Process V2 Webhook - Daviplata Withdrawal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{webhookSecret}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"source\": \"daviplata\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"sourceFrom\": \"+573001234567\",\n  \"sourceTo\": \"+573009876543\",\n  \"event\": \"withdrawal\",\n  \"message\": \"Daviplata: Retiraste $100,000 en cajero. Comisión: $3,500. Saldo: $800,000. No responder.\",\n  \"amount\": 100000,\n  \"currency\": \"COP\",\n  \"webhookId\": \"{{webhookId}}\",\n  \"metadata\": {\n    \"fee\": 3500,\n    \"location\": \"Cajero Davivienda Calle 80\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/webhook/transaction",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "webhook", "transaction"]
+            },
+            "description": "Process a Daviplata withdrawal transaction via V2 API"
+          }
+        },
+        {
+          "name": "Process V2 Webhook - Invalid Validation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{webhookSecret}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"source\": \"invalid-bank\",\n  \"timestamp\": \"invalid-timestamp\",\n  \"sourceFrom\": \"invalid-email\",\n  \"sourceTo\": \"invalid-phone\",\n  \"event\": \"invalid-event\",\n  \"message\": \"Invalid message\",\n  \"amount\": \"not-a-number\",\n  \"webhookId\": \"{{webhookId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/webhook/transaction",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "webhook", "transaction"]
+            },
+            "description": "Test validation errors with invalid payload"
+          }
+        },
+        {
+          "name": "Process V2 Webhook - Duplicate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{webhookSecret}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"source\": \"bancolombia\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"sourceFrom\": \"bancolombia@noreply.com\",\n  \"sourceTo\": \"jdcadavid96@gmail.com\",\n  \"event\": \"deposit\",\n  \"message\": \"Bancolombia te informa que se ha realizado un abono por $190,000 a tu cuenta de ahorros **7251 el 15/01/2024 a las 14:30. Saldo disponible: $2,500,000. No respondas este mensaje.\",\n  \"amount\": 190000,\n  \"currency\": \"COP\",\n  \"webhookId\": \"duplicate_v2_test_123\",\n  \"metadata\": {\n    \"accountNumber\": \"**7251\",\n    \"senderName\": \"Juan Pérez\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/webhook/transaction",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "webhook", "transaction"]
+            },
+            "description": "Test duplicate webhook ID handling in V2 API"
+          }
+        },
+        {
+          "name": "Process V2 Webhook - Missing Auth",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"source\": \"bancolombia\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"sourceFrom\": \"bancolombia@noreply.com\",\n  \"sourceTo\": \"jdcadavid96@gmail.com\",\n  \"event\": \"deposit\",\n  \"message\": \"Bancolombia te informa que se ha realizado un abono por $190,000 a tu cuenta de ahorros **7251 el 15/01/2024 a las 14:30. Saldo disponible: $2,500,000. No respondas este mensaje.\",\n  \"amount\": 190000,\n  \"currency\": \"COP\",\n  \"webhookId\": \"{{webhookId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/webhook/transaction",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "webhook", "transaction"]
+            },
+            "description": "Test authentication error - missing authorization header"
+          }
+        },
+        {
+          "name": "Process V2 Webhook - Invalid Auth",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer invalid-secret"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"source\": \"bancolombia\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"sourceFrom\": \"bancolombia@noreply.com\",\n  \"sourceTo\": \"jdcadavid96@gmail.com\",\n  \"event\": \"deposit\",\n  \"message\": \"Bancolombia te informa que se ha realizado un abono por $190,000 a tu cuenta de ahorros **7251 el 15/01/2024 a las 14:30. Saldo disponible: $2,500,000. No respondas este mensaje.\",\n  \"amount\": 190000,\n  \"currency\": \"COP\",\n  \"webhookId\": \"{{webhookId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/webhook/transaction",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "webhook", "transaction"]
+            },
+            "description": "Test authentication error - invalid webhook secret"
+          }
+        },
+        {
+          "name": "Process V2 Webhook - Large Payload",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{webhookSecret}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"source\": \"bancolombia\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"sourceFrom\": \"bancolombia@noreply.com\",\n  \"sourceTo\": \"jdcadavid96@gmail.com\",\n  \"event\": \"deposit\",\n  \"message\": \"Bancolombia te informa que se ha realizado un abono por $190,000 a tu cuenta de ahorros **7251 el 15/01/2024 a las 14:30. Saldo disponible: $2,500,000. No respondas este mensaje.\",\n  \"amount\": 190000,\n  \"currency\": \"COP\",\n  \"webhookId\": \"{{webhookId}}\",\n  \"metadata\": {\n    \"accountNumber\": \"**7251\",\n    \"senderName\": \"Juan Pérez\",\n    \"reference\": \"TRF-123456789\",\n    \"largeData\": \"This is a very large payload to test the 20KB limit for V2 webhooks. This text is repeated many times to reach the limit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. This text is repeated many times to reach the limit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. This text is repeated many times to reach the limit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/webhook/transaction",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "webhook", "transaction"]
+            },
+            "description": "Test payload size limit (20KB for V2)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Error Scenarios",
+      "description": "Test various error conditions and edge cases",
+      "item": [
+        {
+          "name": "Invalid JSON Payload",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{webhookSecret}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"invalid\": json,\n  \"missing\": quotes\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webhook/sms",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhook", "sms"]
+            },
+            "description": "Test invalid JSON payload handling"
+          }
+        },
+        {
+          "name": "Wrong Content-Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "text/plain"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{webhookSecret}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "This is plain text, not JSON",
+              "options": {
+                "raw": {
+                  "language": "text"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webhook/sms",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhook", "sms"]
+            },
+            "description": "Test wrong Content-Type header"
+          }
+        },
+        {
+          "name": "Old Timestamp",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{webhookSecret}}"
+              },
+              {
+                "key": "X-Timestamp",
+                "value": "2020-01-01T00:00:00Z"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Bancolombia te informa que se ha realizado un abono por $190,000 a tu cuenta de ahorros **7251 el 15/01/2024 a las 14:30. Saldo disponible: $2,500,000. No respondas este mensaje.\",\n  \"timestamp\": \"2020-01-01T00:00:00Z\",\n  \"phone\": \"+573001234567\",\n  \"webhookId\": \"{{webhookId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webhook/sms",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhook", "sms"]
+            },
+            "description": "Test old timestamp rejection (5 minutes for V1, 10 minutes for V2)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Performance Tests",
+      "description": "Test API performance and rate limiting",
+      "item": [
+        {
+          "name": "Rapid Fire Requests",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{webhookSecret}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Bancolombia te informa que se ha realizado un abono por $190,000 a tu cuenta de ahorros **7251 el 15/01/2024 a las 14:30. Saldo disponible: $2,500,000. No respondas este mensaje.\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"phone\": \"+573001234567\",\n  \"webhookId\": \"perf_test_{{randomInt}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webhook/sms",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhook", "sms"]
+            },
+            "description": "Test rapid consecutive requests to check rate limiting"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sources Management API",
+      "description": "API endpoints for managing transaction sources and user-source relationships",
+      "item": [
+        {
+          "name": "CORS Preflight - Sources",
+          "request": {
+            "method": "OPTIONS",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sources",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sources"]
+            },
+            "description": "CORS preflight request for sources API"
+          }
+        },
+        {
+          "name": "Get Sources for User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sources?userId={{testUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sources"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{testUserId}}",
+                  "description": "User ID to get sources for"
+                }
+              ]
+            },
+            "description": "Get all sources configured for a specific user"
+          },
+          "response": [
+            {
+              "name": "User Sources Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/sources?userId=user_123e4567-e89b-12d3-a456-426614174000",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "sources"],
+                  "query": [
+                    {
+                      "key": "userId",
+                      "value": "user_123e4567-e89b-12d3-a456-426614174000"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"sources\": [\n    {\n      \"id\": \"src_123e4567-e89b-12d3-a456-426614174000\",\n      \"sourceType\": \"email\",\n      \"sourceValue\": \"jdcadavid96@gmail.com\",\n      \"createdAt\": \"2024-01-15T10:30:00.000Z\"\n    },\n    {\n      \"id\": \"src_987e6543-e21b-12d3-a456-426614174000\",\n      \"sourceType\": \"phone\",\n      \"sourceValue\": \"+573001234567\",\n      \"createdAt\": \"2024-01-15T10:31:00.000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Source by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sources?sourceId={{testSourceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sources"],
+              "query": [
+                {
+                  "key": "sourceId",
+                  "value": "{{testSourceId}}",
+                  "description": "Source ID to get details for"
+                }
+              ]
+            },
+            "description": "Get details of a specific source by ID"
+          },
+          "response": [
+            {
+              "name": "Source Details Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/sources?sourceId=src_123e4567-e89b-12d3-a456-426614174000",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "sources"],
+                  "query": [
+                    {
+                      "key": "sourceId",
+                      "value": "src_123e4567-e89b-12d3-a456-426614174000"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"source\": {\n    \"id\": \"src_123e4567-e89b-12d3-a456-426614174000\",\n    \"sourceType\": \"email\",\n    \"sourceValue\": \"jdcadavid96@gmail.com\",\n    \"createdAt\": \"2024-01-15T10:30:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Email Source",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceType\": \"email\",\n  \"sourceValue\": \"{{testEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sources",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sources"]
+            },
+            "description": "Create a new email source"
+          },
+          "response": [
+            {
+              "name": "Email Source Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"sourceType\": \"email\",\n  \"sourceValue\": \"jdcadavid96@gmail.com\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/sources",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "sources"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"source\": {\n    \"id\": \"src_123e4567-e89b-12d3-a456-426614174000\",\n    \"sourceType\": \"email\",\n    \"sourceValue\": \"jdcadavid96@gmail.com\",\n    \"createdAt\": \"2024-01-15T10:30:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Phone Source",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceType\": \"phone\",\n  \"sourceValue\": \"{{testPhone}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sources",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sources"]
+            },
+            "description": "Create a new phone source"
+          }
+        },
+        {
+          "name": "Create Webhook Source",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceType\": \"webhook\",\n  \"sourceValue\": \"https://my-webhook-endpoint.com/webhook\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sources",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sources"]
+            },
+            "description": "Create a new webhook source"
+          }
+        },
+        {
+          "name": "Create Source - Invalid Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceType\": \"invalid_type\",\n  \"sourceValue\": \"test@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sources",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sources"]
+            },
+            "description": "Test validation error with invalid source type"
+          }
+        },
+        {
+          "name": "Create Source - Missing Fields",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceType\": \"email\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sources",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sources"]
+            },
+            "description": "Test validation error with missing required fields"
+          }
+        }
+      ]
+    },
+    {
+      "name": "User-Source Relationships API",
+      "description": "API endpoints for managing user-source associations",
+      "item": [
+        {
+          "name": "CORS Preflight - User Sources",
+          "request": {
+            "method": "OPTIONS",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sources/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sources", "users"]
+            },
+            "description": "CORS preflight request for user-sources API"
+          }
+        },
+        {
+          "name": "Get Users for Source",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sources/users?sourceId={{testSourceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sources", "users"],
+              "query": [
+                {
+                  "key": "sourceId",
+                  "value": "{{testSourceId}}",
+                  "description": "Source ID to get users for"
+                }
+              ]
+            },
+            "description": "Get all users associated with a specific source"
+          },
+          "response": [
+            {
+              "name": "Users for Source Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/sources/users?sourceId=src_123e4567-e89b-12d3-a456-426614174000",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "sources", "users"],
+                  "query": [
+                    {
+                      "key": "sourceId",
+                      "value": "src_123e4567-e89b-12d3-a456-426614174000"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"sourceId\": \"src_123e4567-e89b-12d3-a456-426614174000\",\n  \"userIds\": [\n    \"user_123e4567-e89b-12d3-a456-426614174000\",\n    \"user_987e6543-e21b-12d3-a456-426614174000\"\n  ],\n  \"count\": 2\n}"
+            }
+          ]
+        },
+        {
+          "name": "Associate User with Source",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{testUserId}}\",\n  \"sourceId\": \"{{testSourceId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sources/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sources", "users"]
+            },
+            "description": "Associate a user with a source"
+          },
+          "response": [
+            {
+              "name": "User Source Association Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"userId\": \"user_123e4567-e89b-12d3-a456-426614174000\",\n  \"sourceId\": \"src_123e4567-e89b-12d3-a456-426614174000\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/sources/users",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "sources", "users"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"userSource\": {\n    \"id\": \"us_123e4567-e89b-12d3-a456-426614174000\",\n    \"userId\": \"user_123e4567-e89b-12d3-a456-426614174000\",\n    \"sourceId\": \"src_123e4567-e89b-12d3-a456-426614174000\",\n    \"isActive\": true,\n    \"createdAt\": \"2024-01-15T10:30:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Associate User with Source - Duplicate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{testUserId}}\",\n  \"sourceId\": \"{{testSourceId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sources/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sources", "users"]
+            },
+            "description": "Test duplicate user-source association (should return error)"
+          }
+        },
+        {
+          "name": "Associate User with Source - Missing Fields",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{testUserId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sources/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sources", "users"]
+            },
+            "description": "Test validation error with missing required fields"
+          }
+        },
+        {
+          "name": "Remove User-Source Association",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sources/users?userId={{testUserId}}&sourceId={{testSourceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sources", "users"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{testUserId}}",
+                  "description": "User ID to remove from source"
+                },
+                {
+                  "key": "sourceId",
+                  "value": "{{testSourceId}}",
+                  "description": "Source ID to remove user from"
+                }
+              ]
+            },
+            "description": "Remove user-source association"
+          },
+          "response": [
+            {
+              "name": "User Source Association Removed",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/sources/users?userId=user_123e4567-e89b-12d3-a456-426614174000&sourceId=src_123e4567-e89b-12d3-a456-426614174000",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "sources", "users"],
+                  "query": [
+                    {
+                      "key": "userId",
+                      "value": "user_123e4567-e89b-12d3-a456-426614174000"
+                    },
+                    {
+                      "key": "sourceId",
+                      "value": "src_123e4567-e89b-12d3-a456-426614174000"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"User source association removed successfully\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Remove User-Source Association - Missing Parameters",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sources/users?userId={{testUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sources", "users"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{testUserId}}"
+                }
+              ]
+            },
+            "description": "Test validation error with missing sourceId parameter"
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set dynamic timestamp",
+          "pm.globals.set('timestamp', new Date().toISOString());",
+          "",
+          "// Generate unique webhook ID",
+          "pm.globals.set('webhookId', 'webhook_' + Date.now() + '_' + Math.floor(Math.random() * 1000));"
+        ]
+      }
+    }
+  ]
+}
